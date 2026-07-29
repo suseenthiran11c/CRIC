@@ -18,6 +18,7 @@ try:
     from app.models import User, Team, Player, Match, Innings, Tournament, Fixture
     from app.auth import hash_password
 except ImportError:
+    # pyrefly: ignore [missing-import]
     from database import engine, Base, SessionLocal
     from routers import auth_router, team_router, player_router, match_router, tournament_router, stats_router, admin_router
     from models import User, Team, Player, Match, Innings, Tournament, Fixture
