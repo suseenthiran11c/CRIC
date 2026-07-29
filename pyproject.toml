@@ -1,8 +1,11 @@
+[project]
+name = "cric"
+version = "0.1.0"
+
+dependencies = [
+    "fastapi",
+    "uvicorn"
+]
+
 [tool.vercel]
 entrypoint = "backend.app.main:app"
-
-[tool.pyright]
-extraPaths = ["backend"]
-
-[tool.pytest.ini_options]
-pythonpath = ["backend"]
