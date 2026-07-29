@@ -11,8 +11,6 @@ if PARENT_DIR not in sys.path:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 try:
     from app.database import engine, Base, SessionLocal
@@ -35,9 +33,15 @@ app = FastAPI(
 )
 
 # Enable CORS for frontend integration
+# In production, Vercel serves the frontend on the same domain so wildcard is fine.
+# To lock it down, set ALLOWED_ORIGINS env var: "https://your-app.vercel.app"
+import os as _os
+_raw_origins = _os.getenv("ALLOWED_ORIGINS", "*")
+_allowed_origins = [o.strip() for o in _raw_origins.split(",")] if _raw_origins != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -164,20 +168,14 @@ def seed_database():
     finally:
         db.close()
 
-# Static Files & Frontend App Serving
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "..", "frontend"))
-if not os.path.exists(FRONTEND_DIR):
-    FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
-if not os.path.exists(FRONTEND_DIR):
-    FRONTEND_DIR = os.path.abspath(os.path.join(os.getcwd(), "frontend"))
-
-if os.path.exists(FRONTEND_DIR):
-    app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_DIR, "static")), name="static")
-
-    @app.get("/")
-    def serve_frontend_index():
-        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+# NOTE: Static files (frontend) are served by Vercel CDN directly.
+# FastAPI only handles /api/* routes in the serverless function.
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "online", "system": "Cricket ScoreHub Cyber-Sports Engine v1.0"}
+    db_type = "postgresql" if os.getenv("DATABASE_URL") else "sqlite (local dev)"
+    return {
+        "status": "online",
+        "system": "Cricket ScoreHub Cyber-Sports Engine v1.0",
+        "database": db_type
+    }

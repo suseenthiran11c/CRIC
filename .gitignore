@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+
+# Environment Variables (NEVER commit these!)
+.env
+.env.local
+.env.production
+
+# SQLite (local dev only — use PostgreSQL in production)
+*.db
+*.sqlite3
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/

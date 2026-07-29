@@ -1,15 +1,4 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "app/main.py",
-            "use": "@vercel/python"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "app/main.py"
-        }
-    ]
+  "_comment": "This file is superseded by the root-level vercel.json. Do not deploy from this directory.",
+  "_info": "Run 'vercel' from the project root (CRIC/) instead."
 }
