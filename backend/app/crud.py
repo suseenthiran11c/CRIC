@@ -1,7 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
+# pyrefly: ignore [missing-import]
 from app.models import User, Team, Player, Match, Innings, BallEvent, BattingScorecard, BowlingScorecard, Tournament, Fixture
+# pyrefly: ignore [missing-import]
 from app.schemas import UserCreate, TeamCreate, PlayerCreate, MatchCreate, TossRequest, BallScoreRequest, TournamentCreate
+# pyrefly: ignore [missing-import]
 from app.auth import hash_password
 
 # --- USER CRUD ---

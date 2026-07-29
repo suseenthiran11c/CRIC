@@ -1,4 +1,5 @@
-/*====================================================
+/*
+====================================================
  API CLIENT & FALLBACK DATA MANAGER
 ==================================================== */
 
@@ -109,13 +110,21 @@ class ApiClient {
           inn.total_overs = parseFloat(`${overs}.${balls}`);
         }
 
+        // Update Recent Balls timeline
+        if (!inn.recent_balls) inn.recent_balls = ["0", "4", "0", "6", "WD", "W"];
+        let ballText = `${runs}`;
+        if (payload.is_wicket) ballText = "W";
+        else if (payload.is_extra) ballText = payload.extra_type || "EX";
+        inn.recent_balls.push(ballText);
+        if (inn.recent_balls.length > 6) inn.recent_balls.shift();
+
         // Update Active Batter
         if (inn.batting && inn.batting.length > 0) {
           const batter = inn.batting[0];
           batter.runs += runs;
           if (isLegal) batter.balls_faced += 1;
-          if (runs === 4 && !payload.is_extra) batter.fours += 1;
-          if (runs === 6 && !payload.is_extra) batter.sixes += 1;
+          if (runs === 4 && !payload.is_extra) batter.fours = (batter.fours || 0) + 1;
+          if (runs === 6 && !payload.is_extra) batter.sixes = (batter.sixes || 0) + 1;
           if (batter.balls_faced > 0) {
             batter.strike_rate = parseFloat(((batter.runs / batter.balls_faced) * 100).toFixed(2));
           }
@@ -131,6 +140,7 @@ class ApiClient {
     if (endpoint.includes('/undo-ball')) {
       const inn = mockMatchState.innings_1;
       if (inn.total_runs > 0) inn.total_runs = Math.max(0, inn.total_runs - 1);
+      if (inn.recent_balls && inn.recent_balls.length > 0) inn.recent_balls.pop();
       return { status: "success", scorecard: mockMatchState };
     }
 

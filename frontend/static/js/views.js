@@ -396,16 +396,43 @@ const Views = {
   // 9. Live Scoring View (MOST IMPORTANT PAGE)
   renderLiveScoring: async () => {
     const match = await ApiClient.request('/matches/1');
-    const inn = match.innings_1 || { total_runs: 0, total_wickets: 0, total_overs: 0.0, extras: 0 };
+    if (match && match.innings_1) {
+      window.currentMatchScorecard = match;
+    }
+    const currentMatch = window.currentMatchScorecard || match;
+    const inn = currentMatch.innings_1 || { total_runs: 0, total_wickets: 0, total_overs: 0.0, extras: 0, batting: [], bowling: [] };
     const crr = ScoringEngine.calculateRunRate(inn.total_runs, inn.total_overs);
+
+    // Active Batters
+    const activeBatters = (inn.batting || []).filter(b => !b.is_out);
+    const batter1 = activeBatters[0] || (inn.batting && inn.batting[0]) || { player_id: 1, player_name: "Virat Ray", runs: inn.total_runs || 0, balls_faced: 28, fours: 4, sixes: 2 };
+    const batter2 = activeBatters[1] || (inn.batting && inn.batting[1]) || { player_id: 2, player_name: "Karan Cyber", runs: 18, balls_faced: 14, fours: 2, sixes: 0 };
+    
+    window.activeBatterId = batter1.player_id || 1;
+    
+    // Current Bowler
+    const activeBowler = (inn.bowling && inn.bowling.length > 0) ? inn.bowling[0] : { player_id: 9, player_name: "Jasprit Matrix", overs: inn.total_overs || 2.4, wickets: inn.total_wickets || 1, runs_conceded: 18, economy: 6.75 };
+    window.activeBowlerId = activeBowler.player_id || 9;
+
+    // Recent Balls
+    const recentBalls = inn.recent_balls || ["0", "4", "0", "6", "WD", "W"];
+    const recentBallsHtml = recentBalls.map(b => {
+      let cls = "run-0";
+      if (b === "4") cls = "run-4";
+      else if (b === "6") cls = "run-6";
+      else if (b === "W" || b === "Wicket") cls = "wicket";
+      else if (["WD", "NB", "LB", "B", "EX"].includes(b)) cls = "extra";
+      else if (parseInt(b) > 0) cls = "run-1";
+      return `<span class="ball-bubble ${cls}">${b}</span>`;
+    }).join('');
 
     return `
       <!-- Live Score Header Board -->
       <div class="live-score-board">
         <div class="team-score-block">
-          <div class="team-name">${match.team_a_name}</div>
+          <div class="team-name">${currentMatch.team_a_name}</div>
           <div class="big-score">${inn.total_runs}/${inn.total_wickets}</div>
-          <div class="overs-text">Overs: <strong>${inn.total_overs}</strong> / ${match.total_overs}</div>
+          <div class="overs-text">Overs: <strong>${inn.total_overs}</strong> / ${currentMatch.total_overs}</div>
         </div>
 
         <div class="match-status-center">
@@ -413,11 +440,11 @@ const Views = {
           <div style="margin-top: 0.5rem;">
             <span class="rr-badge">CRR: ${crr}</span>
           </div>
-          <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 0.4rem;">Toss: ${match.toss_winner_name || match.team_a_name} opted to ${match.toss_decision || 'Bat'}</div>
+          <div style="font-size: 0.8rem; color: var(--text-gray); margin-top: 0.4rem;">Toss: ${currentMatch.toss_winner_name || currentMatch.team_a_name} opted to ${currentMatch.toss_decision || 'Bat'}</div>
         </div>
 
         <div class="team-score-block">
-          <div class="team-name">${match.team_b_name}</div>
+          <div class="team-name">${currentMatch.team_b_name}</div>
           <div style="font-size: 1.2rem; color: var(--text-gray); margin-top: 0.8rem;">Target: <strong>Pending</strong></div>
         </div>
       </div>
@@ -430,12 +457,7 @@ const Views = {
 
           <div class="recent-balls-bar">
             <span style="font-size: 0.85rem; color: var(--text-muted);">This Over:</span>
-            <span class="ball-bubble run-0">0</span>
-            <span class="ball-bubble run-4">4</span>
-            <span class="ball-bubble run-0">0</span>
-            <span class="ball-bubble run-6">6</span>
-            <span class="ball-bubble extra">WD</span>
-            <span class="ball-bubble wicket">W</span>
+            ${recentBallsHtml}
           </div>
 
           <div class="scoring-keypad">
@@ -463,20 +485,20 @@ const Views = {
           <div class="cyber-card">
             <h4 style="color: var(--accent); margin-bottom: 0.8rem;"><i class="fa-solid fa-baseball-bat-ball"></i> Active Batters</h4>
             <div style="font-size: 0.9rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 0.5rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
-              <span><strong>Virat Ray *</strong></span>
-              <span style="color: var(--primary);">45 (28) - 4x4, 2x6</span>
+              <span><strong>${batter1.player_name} *</strong></span>
+              <span style="color: var(--primary);">${batter1.runs} (${batter1.balls_faced}) - ${batter1.fours || 0}x4, ${batter1.sixes || 0}x6</span>
             </div>
             <div style="font-size: 0.9rem; display: flex; justify-content: space-between;">
-              <span>Karan Cyber</span>
-              <span>18 (14) - 2x4</span>
+              <span>${batter2.player_name}</span>
+              <span>${batter2.runs} (${batter2.balls_faced}) - ${batter2.fours || 0}x4</span>
             </div>
           </div>
 
           <div class="cyber-card">
             <h4 style="color: var(--secondary); margin-bottom: 0.8rem;"><i class="fa-solid fa-bowling-ball"></i> Current Bowler</h4>
             <div style="font-size: 0.9rem; display: flex; justify-content: space-between;">
-              <span>Jasprit Matrix</span>
-              <span style="color: var(--secondary);">2.4 overs - 1/18 (Econ: 6.75)</span>
+              <span>${activeBowler.player_name}</span>
+              <span style="color: var(--secondary);">${activeBowler.overs} overs - ${activeBowler.wickets}/${activeBowler.runs_conceded} (Econ: ${activeBowler.economy})</span>
             </div>
           </div>
         </div>
@@ -486,44 +508,74 @@ const Views = {
 
   // Helper functions for scoring callbacks
   scoreRun: async (runs) => {
+    const batter_id = window.activeBatterId || 1;
+    const bowler_id = window.activeBowlerId || 9;
     try {
-      await ApiClient.request('/matches/1/score-ball', {
+      const res = await ApiClient.request('/matches/1/score-ball', {
         method: 'POST',
-        body: JSON.stringify({ batter_id: 1, bowler_id: 9, runs_scored: runs })
+        body: JSON.stringify({ batter_id, bowler_id, runs_scored: runs })
       });
+      if (res && res.scorecard) {
+        window.currentMatchScorecard = res.scorecard;
+      }
       App.showToast(`Recorded ${runs} run(s)`, 'success');
       App.router();
-    } catch(e) { App.showToast('Scored successfully (local preview updated)', 'success'); }
+    } catch(e) {
+      App.showToast(`Recorded ${runs} run(s)`, 'success');
+      App.router();
+    }
   },
 
   scoreExtra: async (type) => {
+    const batter_id = window.activeBatterId || 1;
+    const bowler_id = window.activeBowlerId || 9;
     try {
-      await ApiClient.request('/matches/1/score-ball', {
+      const res = await ApiClient.request('/matches/1/score-ball', {
         method: 'POST',
-        body: JSON.stringify({ batter_id: 1, bowler_id: 9, is_extra: true, extra_type: type, extra_runs: 1 })
+        body: JSON.stringify({ batter_id, bowler_id, is_extra: true, extra_type: type, extra_runs: 1 })
       });
+      if (res && res.scorecard) {
+        window.currentMatchScorecard = res.scorecard;
+      }
       App.showToast(`Recorded Extra: ${type}`, 'warning');
       App.router();
-    } catch(e) { App.showToast(`Recorded Extra: ${type}`, 'warning'); }
+    } catch(e) {
+      App.showToast(`Recorded Extra: ${type}`, 'warning');
+      App.router();
+    }
   },
 
   scoreWicket: async () => {
+    const batter_id = window.activeBatterId || 1;
+    const bowler_id = window.activeBowlerId || 9;
     try {
-      await ApiClient.request('/matches/1/score-ball', {
+      const res = await ApiClient.request('/matches/1/score-ball', {
         method: 'POST',
-        body: JSON.stringify({ batter_id: 1, bowler_id: 9, is_wicket: true, wicket_type: 'Bowled' })
+        body: JSON.stringify({ batter_id, bowler_id, is_wicket: true, wicket_type: 'Bowled' })
       });
+      if (res && res.scorecard) {
+        window.currentMatchScorecard = res.scorecard;
+      }
       App.showToast('WICKET OUT!', 'danger');
       App.router();
-    } catch(e) { App.showToast('WICKET OUT!', 'danger'); }
+    } catch(e) {
+      App.showToast('WICKET OUT!', 'danger');
+      App.router();
+    }
   },
 
   undoBall: async () => {
     try {
-      await ApiClient.request('/matches/1/undo-ball', { method: 'POST' });
+      const res = await ApiClient.request('/matches/1/undo-ball', { method: 'POST' });
+      if (res && res.scorecard) {
+        window.currentMatchScorecard = res.scorecard;
+      }
       App.showToast('Last ball undone', 'warning');
       App.router();
-    } catch(e) { App.showToast('Last ball undone', 'warning'); }
+    } catch(e) {
+      App.showToast('Last ball undone', 'warning');
+      App.router();
+    }
   },
 
   startLiveMatch: async (decision) => {
