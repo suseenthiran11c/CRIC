@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CricX || Scoring Platform</title>
+  <meta name="description"
+    content="Next-generation AI-inspired Cricket Scoring and Tournament Management Platform featuring real-time ball-by-ball console, 3D toss simulator, and automated scorecards.">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/scoring.css">
+  <link rel="stylesheet" href="/static/css/responsive.css">
+</head>
+
+<body>
+
+  <!-- Animated Particle Canvas & Grid Backdrop -->
+  <canvas id="cyber-canvas"></canvas>
+  <div class="cyber-grid-bg"></div>
+
+  <div id="app">
+    <!-- Floating Navigation Header -->
+    <header class="cyber-header">
+      <a href="#home" class="brand-logo">
+        <div class="logo-icon"><i class="fa-solid fa-trophy"></i></div>
+        <span>ScoreX<strong style="color: var(--primary);">.AI</strong></span>
+      </a>
+
+      <nav>
+        <ul id="nav-links" class="nav-links">
+          <li class="nav-item"><a href="#home" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
+          <li class="nav-item"><a href="#dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+          <li class="nav-item"><a href="#teams"><i class="fa-solid fa-shield-halved"></i> Teams</a></li>
+          <li class="nav-item"><a href="#players"><i class="fa-solid fa-users"></i> Players</a></li>
+          <li class="nav-item"><a href="#match-create"><i class="fa-solid fa-plus-circle"></i> New Match</a></li>
+          <li class="nav-item"><a href="#live-scoring"><i class="fa-solid fa-play text-danger"></i> Live Score</a></li>
+          <li class="nav-item"><a href="#scorecard"><i class="fa-solid fa-table"></i> Scorecard</a></li>
+          <li class="nav-item"><a href="#statistics"><i class="fa-solid fa-chart-column"></i> Stats</a></li>
+          <li class="nav-item"><a href="#tournament"><i class="fa-solid fa-sitemap"></i> Tournament</a></li>
+          <li class="nav-item"><a href="#history"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-user-actions">
+        <a href="#profile" class="btn-cyber btn-outline btn-sm"><i class="fa-solid fa-user"></i> Profile</a>
+        <a href="#login" class="btn-cyber btn-sm"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+        <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </header>
+
+    <!-- Sticky Live Ticker Bar -->
+    <div style="margin-top: 80px;" class="sticky-live-ticker">
+      <div>
+        <span class="ticker-pulse"></span>
+        <strong>LIVE TICKER:</strong> Cyber Strikers 142/3 (15.2 Overs) vs Quantum Titans | CRR: 9.26
+      </div>
+      <div>
+        <a href="#live-scoring" style="color: var(--primary); text-decoration: none; font-size: 0.85rem;"><i
+            class="fa-solid fa-angle-right"></i> Open Console</a>
+      </div>
+    </div>
+
+    <!-- Main View Container -->
+    <main id="view-container" class="main-content">
+      <!-- Dynamic Views Rendered by App.router() -->
+    </main>
+
+    <!-- Cyber Sports Footer -->
+    <footer class="cyber-footer">
+      <div class="footer-container">
+        <div class="footer-brand">
+          <a href="#home" class="brand-logo">
+            <div class="logo-icon"><i class="fa-solid fa-trophy"></i></div>
+            <span>ScoreHub.AI</span>
+          </a>
+          <p>Next-generation cyber sports cricket management and live scoring platform. Built for tournaments, clubs,
+            professional scorers, and fans.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#teams">Teams Roster</a></li>
+            <li><a href="#players">Players Database</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Scoring Features</h4>
+          <ul>
+            <li><a href="#match-create">Match Creation</a></li>
+            <li><a href="#toss">3D Toss Simulator</a></li>
+            <li><a href="#live-scoring">Live Keypad Scoring</a></li>
+            <li><a href="#scorecard">Export PDF Scorecards</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Tournaments & Admin</h4>
+          <ul>
+            <li><a href="#tournament">Fixtures & NRR Table</a></li>
+            <li><a href="#statistics">Orange & Purple Cap</a></li>
+            <li><a href="#history">Match Archives</a></li>
+            <li><a href="#settings">Admin Controls</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Cricket ScoreHub AI. All rights reserved.</p>
+        <p>Cyber Sports Design System • Powered by FastAPI & Vanilla JS</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/store.js"></script>
+  <script src="/static/js/toss.js"></script>
+  <script src="/static/js/scoring.js"></script>
+  <script src="/static/js/charts.js"></script>
+  <script src="/static/js/views.js"></script>
+  <script src="/static/js/app.js"></script>
+
+</body>
+
+</html>
