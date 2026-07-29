@@ -1,10 +1,46 @@
-/* ====================================================
-   API CLIENT & FALLBACK DATA MANAGER
-   ==================================================== */
+/*====================================================
+ API CLIENT & FALLBACK DATA MANAGER
+==================================================== */
 
-const API_BASE_URL = window.location.origin.includes('http') 
-  ? window.location.origin + '/api' 
-  : 'http://127.0.0.1:8000/api';
+// Automatically target port 8000 during local development (e.g. static server on port 3000),
+// and use same-origin /api on production deployment (Vercel).
+const isLocalhost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const API_BASE_URL = isLocalhost
+  ? 'http://127.0.0.1:8000/api'
+  : window.location.origin + '/api';
+
+// In-Memory Stateful Mock Match for Offline Fallback Mode
+let mockMatchState = {
+  match_id: 1,
+  title: "Grand Finals: Cyber Strikers vs Quantum Titans",
+  status: "Live",
+  summary_result: "Cyber Strikers batting first",
+  toss_winner_name: "Cyber Strikers",
+  toss_decision: "Bat",
+  team_a_name: "Cyber Strikers",
+  team_b_name: "Quantum Titans",
+  total_overs: 20,
+  current_innings_num: 1,
+  innings_1: {
+    id: 1,
+    innings_number: 1,
+    batting_team_name: "Cyber Strikers",
+    bowling_team_name: "Quantum Titans",
+    total_runs: 86,
+    total_wickets: 2,
+    total_overs: 9.4,
+    total_legal_balls: 58,
+    extras: 6,
+    is_completed: false,
+    batting: [
+      { id: 1, player_id: 1, player_name: "Virat Ray", runs: 45, balls_faced: 28, fours: 4, sixes: 2, strike_rate: 160.71, is_out: false },
+      { id: 2, player_id: 2, player_name: "Karan Cyber", runs: 18, balls_faced: 14, fours: 2, sixes: 0, strike_rate: 128.57, is_out: false }
+    ],
+    bowling: [
+      { id: 1, player_id: 9, player_name: "Jasprit Matrix", overs: 2.4, maidens: 0, runs_conceded: 18, wickets: 1, economy: 6.75 }
+    ]
+  }
+};
 
 class ApiClient {
   static getToken() {
@@ -46,41 +82,67 @@ class ApiClient {
   }
 
   /* Client-Side Mock Data Engine if backend offline */
-  static handleFallback(endpoint, options) {
+  static handleFallback(endpoint, options = {}) {
+    // 1. Score ball fallback (handles 0, 1, 2, 3, 4, 6, WD, NB, Wicket)
+    if (endpoint.includes('/score-ball') && options.body) {
+      try {
+        const payload = JSON.parse(options.body);
+        const runs = payload.runs_scored || 0;
+        const extraRuns = payload.extra_runs || (payload.is_extra ? 1 : 0);
+        const isLegal = !payload.is_extra || !['WD', 'NB'].includes(payload.extra_type);
+
+        const inn = mockMatchState.innings_1;
+        inn.total_runs += (runs + extraRuns);
+
+        if (payload.is_extra) {
+          inn.extras += extraRuns;
+        }
+
+        if (payload.is_wicket) {
+          inn.total_wickets += 1;
+        }
+
+        if (isLegal) {
+          inn.total_legal_balls = (inn.total_legal_balls || 58) + 1;
+          const overs = Math.floor(inn.total_legal_balls / 6);
+          const balls = inn.total_legal_balls % 6;
+          inn.total_overs = parseFloat(`${overs}.${balls}`);
+        }
+
+        // Update Active Batter
+        if (inn.batting && inn.batting.length > 0) {
+          const batter = inn.batting[0];
+          batter.runs += runs;
+          if (isLegal) batter.balls_faced += 1;
+          if (runs === 4 && !payload.is_extra) batter.fours += 1;
+          if (runs === 6 && !payload.is_extra) batter.sixes += 1;
+          if (batter.balls_faced > 0) {
+            batter.strike_rate = parseFloat(((batter.runs / batter.balls_faced) * 100).toFixed(2));
+          }
+        }
+
+        return { status: "success", scorecard: mockMatchState };
+      } catch (e) {
+        console.error("Error processing fallback score-ball:", e);
+      }
+    }
+
+    // 2. Undo ball fallback
+    if (endpoint.includes('/undo-ball')) {
+      const inn = mockMatchState.innings_1;
+      if (inn.total_runs > 0) inn.total_runs = Math.max(0, inn.total_runs - 1);
+      return { status: "success", scorecard: mockMatchState };
+    }
+
+    // 3. Single Match Detail
+    if (endpoint.includes('/matches/1')) {
+      return mockMatchState;
+    }
+
+    // 4. Matches List
     if (endpoint.includes('/matches')) {
       return [
-        {
-          match_id: 1,
-          title: "Grand Finals: Cyber Strikers vs Quantum Titans",
-          status: "Live",
-          summary_result: "Cyber Strikers lead by 86 runs",
-          toss_winner_name: "Cyber Strikers",
-          toss_decision: "Bat",
-          team_a_name: "Cyber Strikers",
-          team_b_name: "Quantum Titans",
-          total_overs: 20,
-          current_innings_num: 1,
-          innings_1: {
-            id: 1,
-            innings_number: 1,
-            batting_team_name: "Cyber Strikers",
-            bowling_team_name: "Quantum Titans",
-            total_runs: 142,
-            total_wickets: 3,
-            total_overs: 15.2,
-            extras: 8,
-            is_completed: false,
-            batting: [
-              { id: 1, player_id: 1, player_name: "Virat Ray", runs: 68, balls_faced: 42, fours: 7, sixes: 3, strike_rate: 161.9, dismissal_info: "c Jasprit b Hardik", is_out: true },
-              { id: 2, player_id: 2, player_name: "Karan Cyber", runs: 45, balls_faced: 31, fours: 5, sixes: 1, strike_rate: 145.16, dismissal_info: "not out", is_out: false },
-              { id: 3, player_id: 3, player_name: "Rohan Pulse", runs: 21, balls_faced: 18, fours: 2, sixes: 1, strike_rate: 116.6, dismissal_info: "not out", is_out: false }
-            ],
-            bowling: [
-              { id: 1, player_id: 9, player_name: "Jasprit Matrix", overs: 4.0, maidens: 0, runs_conceded: 28, wickets: 2, economy: 7.0 },
-              { id: 2, player_id: 8, player_name: "Hardik Quantum", overs: 3.2, maidens: 0, runs_conceded: 34, wickets: 1, economy: 10.2 }
-            ]
-          }
-        },
+        mockMatchState,
         {
           match_id: 2,
           title: "Semi-Final: Solar Knights vs Aero Velocity",
@@ -93,7 +155,8 @@ class ApiClient {
         }
       ];
     }
-    
+
+    // 5. Teams
     if (endpoint.includes('/teams')) {
       return [
         { id: 1, name: "Cyber Strikers", short_name: "CST", logo_url: "⚡", captain_name: "Virat Ray", coach: "Rick Cyber", home_ground: "Neon Dome", players: [] },
@@ -102,6 +165,7 @@ class ApiClient {
       ];
     }
 
+    // 6. Stats
     if (endpoint.includes('/stats')) {
       return {
         orange_cap: [

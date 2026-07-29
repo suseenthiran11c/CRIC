@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime, Text, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from app.database import Base
 
 class User(Base):

@@ -13,15 +13,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
+    # pyrefly: ignore [missing-import]
     from app.database import engine, Base, SessionLocal
+    # pyrefly: ignore [missing-import]
     from app.routers import auth_router, team_router, player_router, match_router, tournament_router, stats_router, admin_router
+    # pyrefly: ignore [missing-import]
     from app.models import User, Team, Player, Match, Innings, Tournament, Fixture
+    # pyrefly: ignore [missing-import]
     from app.auth import hash_password
 except ImportError:
     # pyrefly: ignore [missing-import]
     from database import engine, Base, SessionLocal
+    # pyrefly: ignore [missing-import]
     from routers import auth_router, team_router, player_router, match_router, tournament_router, stats_router, admin_router
+    # pyrefly: ignore [missing-import]
     from models import User, Team, Player, Match, Innings, Tournament, Fixture
+    # pyrefly: ignore [missing-import]
     from auth import hash_password
 
 # Initialize Database tables
